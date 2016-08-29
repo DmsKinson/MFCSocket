@@ -100,7 +100,7 @@ void CMySocketApp::GetLocalAddress(CString &wszAdrr)
 	gethostname(HostName, sizeof(HostName));// 获得本机主机名.
 	hostent* hn;
 	hn = gethostbyname(HostName);//根据本机主机名得到本机ip
-	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[0]);//把ip换成字符串形式
+	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[1]);//把ip换成字符串形式
 }
 
 

@@ -33,7 +33,7 @@ void SockMsg::Assign(const Msg & src)
 void SockMsg::Assign(int nType, TCHAR * szValue)
 {
 	Fresh();
-	m_mValue.ctTime = CTime::GetCurrentTime();
+	m_mValue.ctTime = NOW_TIME;
 	m_mValue.nType = nType;
 	lstrcpy(m_mValue.szValue, szValue);
 }
@@ -57,6 +57,17 @@ BOOL SockMsg::GetValue(TCHAR * szDst)
 		return 1;
 	}
 	return 0;
+}
+
+BOOL SockMsg::IsEmpty()
+{
+	return m_mValue.nType == -1?FALSE:TRUE;
+}
+
+CString SockMsg::GetCString()
+{
+	CString cache(m_mValue.szValue);
+	return cache;
 }
 
 int SockMsg::GetType()

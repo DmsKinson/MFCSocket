@@ -18,12 +18,13 @@ class CMySocketDlg : public CDialogEx
 // Construction
 private:
 	int m_nTryCount;
-	CSock m_sktSock;
+	CSock *m_sktSock;
 	UINT m_nPort;
 public:
 	CMySocketDlg(CWnd* pParent = NULL);	// standard constructor
 	SockMsg m_smMsg;
 	TCHAR m_szServerAddr[256];
+	HWND handle;
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MYSOCKET_DIALOG };
@@ -51,7 +52,18 @@ public:
 	afx_msg void OnBnClickedConnect();
 	afx_msg void OnBnClickedSend();
 	afx_msg void OnBnClickedHost();
+	afx_msg LRESULT OnRecvMsg(WPARAM wParam, LPARAM lParam);
+	void AddLog(CString cstrLog,CTime ctTime);
+	void ClearLog();
+	void AddContent(CString cstrVal, CString cstrUsrName,CTime ctTime);
+	void ClearContent();
 	CString m_cstrLog;
+	CString m_cstrContent;
+	afx_msg void OnBnClickedAbort();
+	CButton m_btnAbort;
+	CButton m_btnConnect;
+	CButton m_btnHost;
+	CButton m_btnSend;
 };
 
 #endif // !MY_SOCKET_DLG_H

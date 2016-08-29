@@ -29,6 +29,8 @@ public:
 	void Assign(int nType, TCHAR *szValue);
 	BOOL InsertValue(UINT nType,TCHAR *szValue);
 	BOOL GetValue(TCHAR *pszDst);
+	BOOL IsEmpty();
+	CString GetCString();
 	int GetType();
 	CTime GetTime();
 };
