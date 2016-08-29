@@ -60,7 +60,7 @@ BOOL CMySocketApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
-	GetLocalAddress(m_cstrHostIP);
+	GetLocalAddress(m_cstrHostIP);		//Get local IP
 	CMySocketDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
@@ -102,6 +102,9 @@ void CMySocketApp::GetLocalAddress(CString &wszAdrr)
 	hn = gethostbyname(HostName);//根据本机主机名得到本机ip
 	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[0]);//把ip换成字符串形式
 }
+
+
+
 
 
 

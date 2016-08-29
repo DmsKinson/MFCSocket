@@ -27,6 +27,7 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+//	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 extern CMySocketApp theApp;

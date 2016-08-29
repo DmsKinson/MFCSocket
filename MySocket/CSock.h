@@ -18,6 +18,8 @@ public:
 	virtual void OnSend(int nErrorCode);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnConnect(int nErrorCode);
+	virtual void OnAccept(int nErrorCode);
+	virtual void OnListen(int nErrorCode);
 	virtual ~CSock();
 };
 

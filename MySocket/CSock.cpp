@@ -57,9 +57,17 @@ void CSock::OnConnect(int nErrorCode)
 		m_mBuffer.ctTime = CTime::GetCurrentTime();
 		m_mBuffer.nType = TP_SYS;
 		pDlg->m_smMsg.Assign(m_mBuffer);
-		AsyncSelect(FD_READ);
+		AsyncSelect(FD_READ | FD_WRITE);
 	}
 	CAsyncSocket::OnConnect(nErrorCode);
+}
+
+void CSock::OnAccept(int nErrorCode)
+{
+}
+
+void CSock::OnListen(int nErrorCode)
+{
 }
 
 CSock::~CSock()

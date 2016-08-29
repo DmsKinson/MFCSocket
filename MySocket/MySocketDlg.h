@@ -43,12 +43,15 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP();
 public:
-	afx_msg void OnBnClickedConnect();
-	CEdit m_edtIP;
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnBnClickedSend();
 	CEdit m_edtTalk;
 	CStatic m_csHostIP;
+	CEdit m_edtIP;
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnBnClickedConnect();
+	afx_msg void OnBnClickedSend();
+	afx_msg void OnBnClickedHost();
+	CString m_cstrLog;
 };
 
 #endif // !MY_SOCKET_DLG_H
