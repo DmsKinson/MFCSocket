@@ -1,12 +1,31 @@
 #include "stdafx.h"
 #include "SockMsg.h"
 
+Msg::Msg(CString Value, UINT Type, CTime Time)
+{
+	cstrValue = Value;
+	nType = Type;
+	ctTime = Time;
+}
+
+Msg::Msg(const Msg & msg)
+{
+	//memcpy(this, &msg, sizeof(msg));
+	cstrValue = msg.cstrValue;
+	nType = msg.nType;
+	ctTime = msg.ctTime;
+}
+
+Msg::Msg()
+{
+
+}
 
 SockMsg::SockMsg()
 {
-	m_mValue.ctTime = GetCurrentTime();
+	m_mValue.ctTime = NOW_TIME;
 	m_mValue.nType = 0;
-	memset(m_mValue.szValue, 0, sizeof(m_mValue.szValue));
+	m_mValue.cstrValue.Empty();
 }
 
 SockMsg::SockMsg(Msg smMsg)
@@ -30,44 +49,35 @@ void SockMsg::Assign(const Msg & src)
 	memcpy(&m_mValue, &src, sizeof(src));
 }
 
-void SockMsg::Assign(int nType, TCHAR * szValue)
-{
-	Fresh();
-	m_mValue.ctTime = NOW_TIME;
-	m_mValue.nType = nType;
-	lstrcpy(m_mValue.szValue, szValue);
-}
-
-BOOL SockMsg::InsertValue(UINT nType, TCHAR * szValue)
-{
-	if (szValue)
-	{
-		m_mValue.nType = nType;
-		memcpy(m_mValue.szValue, szValue, sizeof(szValue));
-		return 1;
-	}
-	return 0;
-}
-
-BOOL SockMsg::GetValue(TCHAR * szDst)
-{
-	if (szDst)
-	{
-		lstrcpy(m_mValue.szValue, szDst);
-		return 1;
-	}
-	return 0;
-}
+//BOOL SockMsg::InsertValue(UINT nType, TCHAR * szValue)
+//{
+//	if (szValue)
+//	{
+//		m_mValue.nType = nType;
+//		memcpy(m_mValue.cstrValue, szValue, sizeof(szValue));
+//		return 1;
+//	}
+//	return 0;
+//}
+//
+//BOOL SockMsg::GetValue(TCHAR * szDst)
+//{
+//	if (szDst)
+//	{
+//		lstrcpy(m_mValue.cstrValue, szDst);
+//		return 1;
+//	}
+//	return 0;
+//}
 
 BOOL SockMsg::IsEmpty()
 {
-	return m_mValue.nType == -1?FALSE:TRUE;
+	return m_mValue.cstrValue.IsEmpty();
 }
 
 CString SockMsg::GetCString()
 {
-	CString cache(m_mValue.szValue);
-	return cache;
+	return m_mValue.cstrValue;
 }
 
 int SockMsg::GetType()

@@ -6,14 +6,18 @@
 #define TP_WUZIQI 1
 #define TP_PAODEKUAI 2
 #define TP_MINE 3
-#define TP_SYS 4
+#define TP_LOG 4
+#define TP_QUIT 5
 
 
 struct Msg
 {
+	Msg(CString cstrValue, UINT nType, CTime ctTime);
+	Msg(const Msg &msg);
+	Msg();
 	CTime ctTime;
 	UINT nType;
-	TCHAR szValue[4096];
+	CString cstrValue;
 };
 
 class SockMsg
@@ -26,9 +30,8 @@ public:
 	~SockMsg();
 	void Fresh();
 	void Assign(const Msg& src);
-	void Assign(int nType, TCHAR *szValue);
-	BOOL InsertValue(UINT nType,TCHAR *szValue);
-	BOOL GetValue(TCHAR *pszDst);
+	//BOOL InsertValue(UINT nType,TCHAR *szValue);
+	//BOOL GetValue(TCHAR *pszDst);
 	BOOL IsEmpty();
 	CString GetCString();
 	int GetType();

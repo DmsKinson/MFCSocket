@@ -1,44 +1,40 @@
-// ClintSock.cpp : implementation file
-//
-
 #include "stdafx.h"
 #include "MySocket.h"
-#include "CSock.h"
+#include "CCSock.h"
 #include "MySocketDlg.h"
-
-
-// CClintSock
-
-CSock::CSock()
+//client socket
+CCSock::CCSock()
 {
 	m_bConnected = false;
 	m_nLength = 0;
 	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
 }
 
-void CSock::SetStatus(BOOL bStat)
+void CCSock::SetStatus(BOOL bStat)
 {
 	m_bConnected = bStat;
 }
 
-BOOL CSock::IsConnected()
+BOOL CCSock::IsConnected()
 {
 	return m_bConnected;
 }
 
-void CSock::OnSend(int nErrorCode)
+
+
+void CCSock::OnSend(int nErrorCode)
 {
 	Send(&m_mBuffer, m_nLength);
-	m_nLength = 0;
-	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
-	AsyncSelect(FD_READ);
+	//AsyncSelect(FD_READ);
 	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
 	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-	pDlg->AddContent(m_mBuffer.szValue, _T("Husky"), NOW_TIME);
+//	pDlg->AddContent(m_mBuffer.cstrValue, _T("Husky"), NOW_TIME);
+	m_nLength = 0;
+	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
 	CAsyncSocket::OnSend(nErrorCode);
 }
 
-void CSock::OnReceive(int nErrorCode)
+void CCSock::OnReceive(int nErrorCode)
 {
 	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
 	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
@@ -50,67 +46,40 @@ void CSock::OnReceive(int nErrorCode)
 	CAsyncSocket::OnReceive(nErrorCode);
 }
 
-void CSock::OnConnect(int nErrorCode)
+void CCSock::OnConnect(int nErrorCode)
 {
 	if (nErrorCode == 0)
-	{
-		m_bConnected = TRUE;
-		CMySocketApp *pApp = (CMySocketApp*)AfxGetApp();
-		CMySocketDlg *pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-		CString cache(pDlg->m_szServerAddr);
-		pDlg->AddLog(_T("Connect to ") + cache, NOW_TIME);
-		//memcpy(m_mBuffer.szValue, "Connect to", 11);
-		//lstrcat(m_mBuffer.szValue, pDlg->m_szServerAddr);
-		//m_mBuffer.ctTime = CTime::GetCurrentTime();
-		//m_mBuffer.nType = TP_SYS;
-		//pDlg->m_smMsg.Assign(m_mBuffer);
-		//AsyncSelect(FD_WRITE);
-	}
-	else
-		ProcErrorCode(nErrorCode);
-	CAsyncSocket::OnConnect(nErrorCode);
+		{
+			m_bConnected = TRUE;
+			CMySocketApp *pApp = (CMySocketApp*)AfxGetApp();
+			CMySocketDlg *pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
+			CString cache(pDlg->m_szServerAddr);
+			pDlg->AddLog(_T("Connect to ") + cache, NOW_TIME);
+			//AsyncSelect(FD_WRITE);
+		}
+		else
+			ProcErrorCode(nErrorCode);
+		CAsyncSocket::OnConnect(nErrorCode);
 }
 
-void CSock::OnAccept(int nErrorCode)
-{
-	CSock *pSock = new CSock();
-	if (Accept(*pSock))
-	{
-		//AfxMessageBox(_T("get accept"));
-		pSock->AsyncSelect(FD_READ);
-		m_sktCltSock = pSock;
-		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-		CString cstrCltName;
-		UINT nCltPort;
-		pSock->GetPeerName(cstrCltName,nCltPort);
-		pDlg->AddLog(_T("Connect to ") + cstrCltName, NOW_TIME);
-	}
-	else
-	{
-		delete pSock;
-	}
-}
-
-
-
-void CSock::OnClose(int nErrorCode)
+void CCSock::OnClose(int nErrorCode)
 {
 	if (m_hSocket != INVALID_SOCKET)
 	{
 		m_bConnected = FALSE;
+		m_hSocket = INVALID_SOCKET;
 		Close();
 	}
 	delete this;
 }
 
-CSock::~CSock()
+CCSock::~CCSock()
 {
 	if (m_hSocket != INVALID_SOCKET)
 		Close();
 }
 
-void CSock::ProcErrorCode(int nErrorCode)
+void CCSock::ProcErrorCode(int nErrorCode)
 {
 	switch (nErrorCode)
 	{
@@ -149,6 +118,3 @@ void CSock::ProcErrorCode(int nErrorCode)
 		break;
 	}
 }
-
-
-// CClintSock member functions

@@ -6,15 +6,13 @@
 #include "MySocket.h"
 #include "MySocketDlg.h"
 #include "afxdialogex.h"
+#include "CCSock.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-
 // CMySocketDlg dialog
-
-
 
 CMySocketDlg::CMySocketDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_MYSOCKET_DIALOG, pParent)
@@ -22,7 +20,13 @@ CMySocketDlg::CMySocketDlg(CWnd* pParent /*=NULL*/)
 	, m_cstrContent(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
-	m_sktSock = NULL;
+	m_sktCSock = NULL;
+	m_sktSSock = NULL;
+}
+
+BOOL CMySocketDlg::IsServer()
+{
+	return m_bIsServer;
 }
 
 void CMySocketDlg::DoDataExchange(CDataExchange* pDX)
@@ -132,7 +136,7 @@ LRESULT CMySocketDlg::OnRecvMsg(WPARAM wParam, LPARAM lParam)
 	{
 		switch (m_smMsg.GetType())
 		{
-		case TP_SYS:
+		case TP_LOG:
 			AddLog(m_smMsg.GetCString(),m_smMsg.GetTime());
 			break;
 		case TP_TALK:
@@ -184,19 +188,19 @@ void CMySocketDlg::ClearContent()
 void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: Add your message handler code here and/or call default
-	if (m_sktSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
+	if (m_sktCSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
 	{
-		BOOL bFlag = m_sktSock->Create(0, SOCK_STREAM, FD_CONNECT);
+		BOOL bFlag = m_sktCSock->Create(0, SOCK_STREAM, FD_CONNECT);
 		if (!bFlag)
 		{
-			m_sktSock->ProcErrorCode(GetLastError());
-			m_sktSock->Close();
+			m_sktCSock->ProcErrorCode(GetLastError());
+			m_sktCSock->Close();
 			return;
 		}
 	}
-	m_sktSock->Connect(m_szServerAddr, m_nPort);
+	m_sktCSock->Connect(m_szServerAddr, m_nPort);
 	m_nTryCount++;
-	if (m_nTryCount > 10 || m_sktSock->IsConnected())
+	if (m_nTryCount > 10 || m_sktCSock->IsConnected())
 	{
 		KillTimer(0);
 		if (m_nTryCount > 10)
@@ -209,15 +213,15 @@ void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CMySocketDlg::OnBnClickedAbort()
 {
-	if (m_sktSock == NULL)
+	if (m_sktCSock == NULL)
 		return;
-	if (m_sktSock->m_hSocket != INVALID_SOCKET)
+	if (m_sktCSock->m_hSocket != INVALID_SOCKET)
 	{
-		m_sktSock->m_hSocket = INVALID_SOCKET;
-		m_sktSock->SetStatus(FALSE);
-		m_sktSock->ShutDown(2);
-		m_sktSock->Close();
-		m_sktSock = NULL;
+		m_sktCSock->m_hSocket = INVALID_SOCKET;
+		m_sktCSock->SetStatus(FALSE);
+		m_sktCSock->ShutDown(2);
+		m_sktCSock->Close();
+		m_sktCSock = NULL;
 		AddLog(_T("Connection aborted."), NOW_TIME);
 	}
 	m_btnConnect.EnableWindow(TRUE);
@@ -227,57 +231,71 @@ void CMySocketDlg::OnBnClickedAbort()
 
 void CMySocketDlg::OnBnClickedHost()
 {
-	if (m_sktSock == NULL)
-	{
-		AfxSocketInit();
-		m_sktSock = new CSock();
-	}
+	if (m_sktSSock == NULL)
+		m_sktSSock = new CSSock();
 	//Clear socket
 	/*m_sktSock->ShutDown(2);
 	m_sktSock->m_hSocket = INVALID_SOCKET;
 	m_sktSock->SetStatus(FALSE);*/
 	//m_nPort = 1088;
-	if (m_sktSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
+	if (m_sktSSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
 	{
-		//m_sktSock->SetSockOpt(0,0,0,SOL_SOCKET);
-		BOOL bFlag = m_sktSock->Create(1088, SOCK_STREAM, FD_ACCEPT);
+		BOOL bFlag = m_sktSSock->Create(1088, SOCK_STREAM, FD_ACCEPT);
 		if (!bFlag)
 		{
-			m_sktSock->ProcErrorCode(GetLastError());
-			m_sktSock->Close();
+			m_sktSSock->ProcErrorCode(GetLastError());
+			m_sktSSock->Close();
 			return;
 		}
 	}
+	
 	/*UINT nPort=0;
 	char szPort[4];
 	m_sktSock->GetPeerName(CString(), nPort);
 	itoa(nPort, szPort, 10);*/
-	if (!m_sktSock->Listen())
+	if (!m_sktSSock->Listen())
 	{
-		if (m_sktSock->GetLastError() != WSAEWOULDBLOCK)
+		if (m_sktSSock->GetLastError() != WSAEWOULDBLOCK)
 		{
 			AfxMessageBox(_T("Error"));
-			m_sktSock->Close();
+			m_sktSSock->Close();
 		}
 	}
+	m_bIsServer = TRUE;		//Become a server;
 	AddLog(_T("Waiting for connecting... ") , NOW_TIME);
+	//create and connect self-client 
+	if (m_sktCSock == NULL)
+		m_sktCSock = new CCSock();
+	if (m_sktCSock->m_hSocket == INVALID_SOCKET)		
+	{
+		BOOL bFlag = m_sktCSock->Create(0, SOCK_STREAM, FD_ACCEPT);
+		if (!bFlag)
+		{
+			m_sktCSock->ProcErrorCode(GetLastError());
+			m_sktCSock->Close();
+			return;
+		}
+	}
+	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
+	m_sktCSock->Connect(pApp->m_cstrHostIP, m_nPort);
+	//Forbidden button
 	m_btnConnect.EnableWindow(FALSE);
 	m_btnHost.EnableWindow(FALSE);
 }
 
 void CMySocketDlg::OnBnClickedSend()
 {
-	if (m_sktSock->IsConnected())
+	if (m_sktCSock->IsConnected())
 	{
 		Msg temp;
 		temp.ctTime = NOW_TIME;
 		temp.nType = TP_TALK;
-		m_edtTalk.GetWindowTextW(temp.szValue, sizeof(temp.szValue));
-		m_sktSock->m_nLength = sizeof(temp);
+		m_edtTalk.GetWindowTextW(temp.cstrValue);
+		m_sktCSock->m_nLength = sizeof(temp);
 		m_smMsg.Assign(temp);
-		m_sktSock->AsyncSelect(FD_WRITE);
+		m_sktCSock->AsyncSelect(FD_WRITE);
 		m_edtTalk.SetWindowTextW(_T(""));
-		AddContent(temp.szValue, _T("Husky"), NOW_TIME);
+		AddContent(temp.cstrValue, _T("Husky"), NOW_TIME);
 	}
 	else
 	{
@@ -287,10 +305,10 @@ void CMySocketDlg::OnBnClickedSend()
 
 void CMySocketDlg::OnBnClickedConnect()
 {
-	if (m_sktSock == NULL)
+	if (m_sktCSock == NULL)
 	{
 		AfxSocketInit();
-		m_sktSock = new CSock();
+		m_sktCSock = new CCSock();
 	}
 	/*m_sktSock->ShutDown(2);
 	m_sktSock->m_hSocket = INVALID_SOCKET;

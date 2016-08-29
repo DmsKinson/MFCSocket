@@ -181,7 +181,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CSock.h" />
+    <ClInclude Include="CSSock.h" />
+    <ClInclude Include="CCSock.h" />
     <ClInclude Include="MySocket.h" />
     <ClInclude Include="MySocketDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -190,7 +191,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CSock.cpp" />
+    <ClCompile Include="CSSock.cpp" />
+    <ClCompile Include="CCSock.cpp" />
     <ClCompile Include="MySocket.cpp" />
     <ClCompile Include="MySocketDlg.cpp" />
     <ClCompile Include="SockMsg.cpp" />

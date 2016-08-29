@@ -1,28 +1,24 @@
 #pragma once
-#ifndef CSOCK_H
-#define CSOCK_H
-
-
-// CClintSock command
+#ifndef CCSOCK_H
+#define CCSOCK_H
 #include "SockMsg.h"
-class CSock : public CAsyncSocket
+//client socket
+class CCSock : public CAsyncSocket
 {
 private:
 	BOOL m_bConnected;
-	Msg m_mBuffer;
 public:
-	CSock *m_sktCltSock;
 	UINT m_nLength;
-	CSock();
+	Msg m_mBuffer;
+	//CPtrList m_lplistClients;
+	CCSock();
 	void SetStatus(BOOL stat);
 	BOOL IsConnected();
 	void ProcErrorCode(int nErrorCode);
 	virtual void OnSend(int nErrorCode);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnConnect(int nErrorCode);
-	virtual void OnAccept(int nErrorCode);
 	virtual void OnClose(int nErrorCode);
-	virtual ~CSock();
+	virtual ~CCSock();
 };
-
-#endif // !CLINT_SOCK_H
+#endif // !CCSOCK_H

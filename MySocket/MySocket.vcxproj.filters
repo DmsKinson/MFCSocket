@@ -36,7 +36,10 @@
     <ClInclude Include="SockMsg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CSock.h">
+    <ClInclude Include="CCSock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSSock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -53,7 +56,10 @@
     <ClCompile Include="SockMsg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CSock.cpp">
+    <ClCompile Include="CCSock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSSock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

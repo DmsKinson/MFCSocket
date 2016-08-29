@@ -8,7 +8,8 @@
 
 
 #include "SockMsg.h"
-#include "CSock.h"
+#include "CCSock.h"
+#include "CSSock.h"
 #include "afxcmn.h"
 #include "afxwin.h"
 
@@ -18,13 +19,16 @@ class CMySocketDlg : public CDialogEx
 // Construction
 private:
 	int m_nTryCount;
-	CSock *m_sktSock;
+	CCSock *m_sktCSock;
+	CSSock *m_sktSSock;
 	UINT m_nPort;
+	BOOL m_bIsServer;
 public:
 	CMySocketDlg(CWnd* pParent = NULL);	// standard constructor
 	SockMsg m_smMsg;
 	TCHAR m_szServerAddr[256];
 	HWND handle;
+	BOOL IsServer();
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_MYSOCKET_DIALOG };
