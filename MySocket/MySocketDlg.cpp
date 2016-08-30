@@ -6,7 +6,7 @@
 #include "MySocket.h"
 #include "MySocketDlg.h"
 #include "afxdialogex.h"
-#include "CCSock.h"
+#include "CSock.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -146,6 +146,8 @@ LRESULT CMySocketDlg::OnRecvMsg(WPARAM wParam, LPARAM lParam)
 			break;
 		case TP_PAODEKUAI:
 			break;
+		case TP_QUIT:
+			m_sktSSock->AsyncSelect(FD_CLOSE);
 		default:
 			break;
 		}
@@ -198,7 +200,9 @@ void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 			return;
 		}
 	}
-	m_sktCSock->Connect(m_szServerAddr, m_nPort);
+	//m_sktCSock->Connect(m_cstrServerAddr, m_nPort);
+	m_sktCSock->Connect(_T("223.3.217.186"), m_nPort);
+
 	m_nTryCount++;
 	if (m_nTryCount > 10 || m_sktCSock->IsConnected())
 	{
@@ -231,12 +235,10 @@ void CMySocketDlg::OnBnClickedAbort()
 
 void CMySocketDlg::OnBnClickedHost()
 {
+	
 	if (m_sktSSock == NULL)
 		m_sktSSock = new CSSock();
 	//Clear socket
-	/*m_sktSock->ShutDown(2);
-	m_sktSock->m_hSocket = INVALID_SOCKET;
-	m_sktSock->SetStatus(FALSE);*/
 	//m_nPort = 1088;
 	if (m_sktSSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
 	{
@@ -248,11 +250,8 @@ void CMySocketDlg::OnBnClickedHost()
 			return;
 		}
 	}
-	
-	/*UINT nPort=0;
-	char szPort[4];
-	m_sktSock->GetPeerName(CString(), nPort);
-	itoa(nPort, szPort, 10);*/
+	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
+	m_cstrServerAddr = pApp->m_cstrHostIP;
 	if (!m_sktSSock->Listen())
 	{
 		if (m_sktSSock->GetLastError() != WSAEWOULDBLOCK)
@@ -266,18 +265,10 @@ void CMySocketDlg::OnBnClickedHost()
 	//create and connect self-client 
 	if (m_sktCSock == NULL)
 		m_sktCSock = new CCSock();
-	if (m_sktCSock->m_hSocket == INVALID_SOCKET)		
-	{
-		BOOL bFlag = m_sktCSock->Create(0, SOCK_STREAM, FD_ACCEPT);
-		if (!bFlag)
-		{
-			m_sktCSock->ProcErrorCode(GetLastError());
-			m_sktCSock->Close();
-			return;
-		}
-	}
-	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-	m_sktCSock->Connect(pApp->m_cstrHostIP, m_nPort);
+	SetTimer(0, 1000, NULL);		//Set timer to connect
+	m_nTryCount = 0;
+	//m_sktCSock->Connect(pApp->m_cstrHostIP, m_nPort);
+	//m_sktCSock->Connect("223.3.217.186", m_nPort);
 	//Forbidden button
 	m_btnConnect.EnableWindow(FALSE);
 	m_btnHost.EnableWindow(FALSE);
@@ -292,10 +283,11 @@ void CMySocketDlg::OnBnClickedSend()
 		temp.nType = TP_TALK;
 		m_edtTalk.GetWindowTextW(temp.cstrValue);
 		m_sktCSock->m_nLength = sizeof(temp);
-		m_smMsg.Assign(temp);
+		//m_smMsg.Assign(temp);
+		m_sktCSock->FillBuffer(temp);
 		m_sktCSock->AsyncSelect(FD_WRITE);
 		m_edtTalk.SetWindowTextW(_T(""));
-		AddContent(temp.cstrValue, _T("Husky"), NOW_TIME);
+		//AddContent(temp.cstrValue,temp.csterUser, NOW_TIME);
 	}
 	else
 	{
@@ -314,9 +306,7 @@ void CMySocketDlg::OnBnClickedConnect()
 	m_sktSock->m_hSocket = INVALID_SOCKET;
 	m_sktSock->SetStatus(FALSE);*/
 	//m_nPort = 1088;
-	if (m_edtIP.GetWindowTextW(m_szServerAddr, sizeof(m_szServerAddr)))		//Get target IP
-	{
-		SetTimer(0, 1000, NULL);		//Set timer to connect
-		m_nTryCount = 0;
-	}
+	m_edtIP.GetWindowText(m_cstrServerAddr);	//Get target IP
+	SetTimer(0, 1000, NULL);		//Set timer to connect
+	m_nTryCount = 0;
 }

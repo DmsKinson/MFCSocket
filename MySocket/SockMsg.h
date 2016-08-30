@@ -12,12 +12,13 @@
 
 struct Msg
 {
-	Msg(CString cstrValue, UINT nType, CTime ctTime);
+	Msg(TCHAR* cstrValue, UINT nType, CTime ctTime);
 	Msg(const Msg &msg);
 	Msg();
+	TCHAR csterUser[4096];
 	CTime ctTime;
 	UINT nType;
-	CString cstrValue;
+	TCHAR cstrValue[4096];
 };
 
 class SockMsg

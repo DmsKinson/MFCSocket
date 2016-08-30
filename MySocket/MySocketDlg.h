@@ -8,8 +8,8 @@
 
 
 #include "SockMsg.h"
-#include "CCSock.h"
-#include "CSSock.h"
+#include "CSock.h"
+#include "SSock.h"
 #include "afxcmn.h"
 #include "afxwin.h"
 
@@ -26,7 +26,7 @@ private:
 public:
 	CMySocketDlg(CWnd* pParent = NULL);	// standard constructor
 	SockMsg m_smMsg;
-	TCHAR m_szServerAddr[256];
+	CString m_cstrServerAddr;
 	HWND handle;
 	BOOL IsServer();
 // Dialog Data

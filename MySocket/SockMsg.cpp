@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "SockMsg.h"
+#include "MySocket.h"
 
 Msg::Msg(CString Value, UINT Type, CTime Time)
 {
 	cstrValue = Value;
 	nType = Type;
 	ctTime = Time;
+	csterUser = ((CMySocketApp*)AfxGetApp())->m_cstrUser;
 }
 
 Msg::Msg(const Msg & msg)
@@ -14,11 +16,12 @@ Msg::Msg(const Msg & msg)
 	cstrValue = msg.cstrValue;
 	nType = msg.nType;
 	ctTime = msg.ctTime;
+	csterUser = ((CMySocketApp*)AfxGetApp())->m_cstrUser;
 }
 
 Msg::Msg()
 {
-
+	
 }
 
 SockMsg::SockMsg()
@@ -41,12 +44,19 @@ SockMsg::~SockMsg()
 
 void SockMsg::Fresh()
 {
-	memset(&m_mValue, 0, sizeof(m_mValue));
+	m_mValue.csterUser.Empty();
+	m_mValue.cstrValue.Empty();
+	m_mValue.ctTime = CTime();
+	m_mValue.nType = 0;
 }
 
 void SockMsg::Assign(const Msg & src)
 {
-	memcpy(&m_mValue, &src, sizeof(src));
+	//memcpy(&m_mValue, &src, sizeof(src));
+	m_mValue.csterUser = src.csterUser;
+	m_mValue.cstrValue = src.cstrValue;
+	m_mValue.ctTime = src.ctTime;
+	m_mValue.nType = src.nType;
 }
 
 //BOOL SockMsg::InsertValue(UINT nType, TCHAR * szValue)

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef CSSOCK_H
-#define CSSOCK_H
+#ifndef SSOCK_H
+#define SSOCK_H
 //Server Socket
 #include "SockMsg.h"
 #include <deque>
@@ -13,15 +13,15 @@ private:
 	Msg m_mBuffer;
 public:
 	UINT m_nLength;
-	CPtrList m_lplistClients;
-	MsgDeque m_mdqMsgs;
+	CPtrList *m_lplistClients;
+	MsgDeque *m_mdqMsgs;
 	CSSock();
 	void SetStatus(BOOL stat);
 	BOOL IsConnected();
 	void ProcErrorCode(int nErrorCode);
 	void EchoClients();
 	//virtual void OnSend(int nErrorCode);
-	virtual void OnReceive(int nErrorCode);
+	//virtual void OnReceive(int nErrorCode);
 	//virtual void OnConnect(int nErrorCode);
 	virtual void OnAccept(int nErrorCode);
 	virtual void OnClose(int nErrorCode);

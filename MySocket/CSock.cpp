@@ -1,13 +1,15 @@
 #include "stdafx.h"
 #include "MySocket.h"
-#include "CCSock.h"
+#include "CSock.h"
 #include "MySocketDlg.h"
 //client socket
 CCSock::CCSock()
 {
 	m_bConnected = false;
 	m_nLength = 0;
-	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	//memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	m_mBuffer.csterUser.Empty();
+	m_mBuffer.cstrValue.Empty();
 }
 
 void CCSock::SetStatus(BOOL bStat)
@@ -20,30 +22,48 @@ BOOL CCSock::IsConnected()
 	return m_bConnected;
 }
 
+void CCSock::FillBuffer(Msg & src)
+{
+	//memcpy(&m_mBuffer, &src, sizeof(src));
+	m_mBuffer.cstrValue = src.cstrValue;
+	m_mBuffer.ctTime = src.ctTime;
+	m_mBuffer.nType = src.nType;
+	m_nLength = sizeof(m_mBuffer);
+}
 
 
 void CCSock::OnSend(int nErrorCode)
 {
+	if (m_mBuffer.cstrValue.IsEmpty())
+	{
+		AfxMessageBox(_T("Can't send empty messsage."));
+		return;
+	}
 	Send(&m_mBuffer, m_nLength);
 	//AsyncSelect(FD_READ);
-	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-//	pDlg->AddContent(m_mBuffer.cstrValue, _T("Husky"), NOW_TIME);
+	//CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
+	//CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
+	//pDlg->AddContent(m_mBuffer.cstrValue, _T("Husky"), NOW_TIME);
 	m_nLength = 0;
-	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	//memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	m_mBuffer.cstrValue.Empty();
+	AsyncSelect(FD_READ);
 	CAsyncSocket::OnSend(nErrorCode);
 }
 
 void CCSock::OnReceive(int nErrorCode)
 {
 	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
-	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-	pDlg->m_smMsg.Assign(m_mBuffer);
-	//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
-	::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
-	//AsyncSelect(FD_WRITE);
-	CAsyncSocket::OnReceive(nErrorCode);
+	if (m_nLength > 0)
+	{
+		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
+		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
+		pDlg->m_smMsg.Assign(m_mBuffer);
+		//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
+		::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
+		//AsyncSelect(FD_WRITE);
+		CAsyncSocket::OnReceive(nErrorCode);
+	}
 }
 
 void CCSock::OnConnect(int nErrorCode)
@@ -53,9 +73,9 @@ void CCSock::OnConnect(int nErrorCode)
 			m_bConnected = TRUE;
 			CMySocketApp *pApp = (CMySocketApp*)AfxGetApp();
 			CMySocketDlg *pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-			CString cache(pDlg->m_szServerAddr);
-			pDlg->AddLog(_T("Connect to ") + cache, NOW_TIME);
-			//AsyncSelect(FD_WRITE);
+			//CString cache(pDlg->m_szServerAddr);
+			pDlg->AddLog(_T("Connect to ") + pDlg->m_cstrServerAddr, NOW_TIME);
+			AsyncSelect(FD_READ);
 		}
 		else
 			ProcErrorCode(nErrorCode);
@@ -64,6 +84,7 @@ void CCSock::OnConnect(int nErrorCode)
 
 void CCSock::OnClose(int nErrorCode)
 {
+
 	if (m_hSocket != INVALID_SOCKET)
 	{
 		m_bConnected = FALSE;

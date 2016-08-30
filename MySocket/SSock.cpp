@@ -1,13 +1,18 @@
 #include "stdafx.h"
 #include "MySocket.h"
-#include "CSSock.h"
+#include "CSock.h"
+#include "BridgeSock.h"
 #include "MySocketDlg.h"
 //Server Socket
 CSSock::CSSock()
 {
 	m_bConnected = false;
 	m_nLength = 0;
-	memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	//memset(&m_mBuffer, 0, sizeof(m_mBuffer));
+	m_mBuffer.cstrValue.Empty();
+	m_mBuffer.csterUser.Empty();
+	m_mdqMsgs = new	MsgDeque();
+	m_lplistClients = new CPtrList(5);
 }
 
 void CSSock::SetStatus(BOOL bStat)
@@ -37,34 +42,35 @@ BOOL CSSock::IsConnected()
 //	CAsyncSocket::OnSend(nErrorCode);
 //}
 
-void CSSock::OnReceive(int nErrorCode)
-{
-	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
-	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-	//pDlg->m_smMsg.Assign(m_mBuffer);
-	m_mdqMsgs.push_back(Msg(m_mBuffer));
-	//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
-	//::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
-	//AsyncSelect(FD_WRITE);
-	//CAsyncSocket::OnReceive(nErrorCode);
-	EchoClients();
-}
+//void CSSock::OnReceive(int nErrorCode)
+//{
+//	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
+//	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
+//	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
+//	//pDlg->m_smMsg.Assign(m_mBuffer);
+//	m_mdqMsgs->push_back(Msg(m_mBuffer));
+//	//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
+//	//::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
+//	//AsyncSelect(FD_WRITE);
+//	//CAsyncSocket::OnReceive(nErrorCode);
+//	EchoClients();
+//}
 
 
 //TODO:
 void CSSock::OnAccept(int nErrorCode)
 {
-	CCSock *pSock = new CCSock();		//create client pointer for possible connect
+	CBridgeSock *pSock = new CBridgeSock();		//create client pointer for possible connect
 	if (Accept(*pSock))
 	{
-		m_lplistClients.AddTail(pSock);
+		//pSock->AsyncSelect(FD_READ);
+		m_lplistClients->AddTail(pSock);  //client en-queue
 		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
 		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
 		CString cstrCltName;
 		UINT nCltPort;
 		pSock->GetPeerName(cstrCltName,nCltPort);		//get information of client
-		m_mdqMsgs.push_back(Msg(_T("Connect to" + cstrCltName),TP_LOG,NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T("Connect to" + cstrCltName),TP_LOG,NOW_TIME));
 		//pDlg->AddLog(_T("Connect to ") + cstrCltName, NOW_TIME);
 		EchoClients();
 	}
@@ -82,9 +88,15 @@ void CSSock::OnClose(int nErrorCode)
 	{
 		m_bConnected = FALSE;
 		m_hSocket = INVALID_SOCKET;
-		m_mdqMsgs.push_back(Msg(_T("Connection Broken."), TP_LOG, NOW_TIME));
-		m_mdqMsgs.push_back(Msg(_T(""),TP_QUIT, NOW_TIME));
+		if(!m_lplistClients->IsEmpty())
+			m_lplistClients->RemoveAll();
+		m_lplistClients = NULL;
+		m_mdqMsgs->push_back(Msg(_T("Connection Broken."), TP_LOG, NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T(" "),TP_QUIT, NOW_TIME));
 		EchoClients();
+		if (!m_mdqMsgs->empty())
+			m_mdqMsgs->clear();
+		m_mdqMsgs = NULL;
 		Close();
 	}
 	delete this;
@@ -138,20 +150,21 @@ void CSSock::ProcErrorCode(int nErrorCode)
 
 void CSSock::EchoClients()
 {
-	for (MsgDeque::iterator iter = m_mdqMsgs.begin(); iter != m_mdqMsgs.end(); iter++)
+	while(!m_mdqMsgs->empty())
 	{
-		Msg tempMsg(*iter);
-		POSITION ps = m_lplistClients.GetHeadPosition();
+		Msg tempMsg(m_mdqMsgs->front());
+		POSITION ps = m_lplistClients->GetHeadPosition();
 		while (ps != NULL)
 		{
-			CCSock* tempCCSock = (CCSock*)m_lplistClients.GetNext(ps);
-			memcpy(&tempCCSock->m_mBuffer, &tempMsg,sizeof(m_mdqMsgs.front()));
+			CBridgeSock* tempBSock = (CBridgeSock*)m_lplistClients->GetNext(ps);
+			//memcpy(&tempCCSock->m_mBuffer, &tempMsg,sizeof(m_mdqMsgs.front()));
+			tempBSock->FillBuffer(tempMsg);
 			/*tempCCSock->m_mBuffer.cstrValue = tempMsg.cstrValue;
 			tempCCSock->m_mBuffer.ctTime = tempMsg.ctTime;
 			tempCCSock->m_mBuffer.nType = tempMsg.nType;*/
-			tempCCSock->AsyncSelect(FD_WRITE);
+			tempBSock->AsyncSelect(FD_WRITE);
 		}
-		m_mdqMsgs.pop_front();		
+		m_mdqMsgs->pop_front();
 	}
 	
 }

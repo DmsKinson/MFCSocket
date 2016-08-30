@@ -1,6 +1,6 @@
 #pragma once
-#ifndef CCSOCK_H
-#define CCSOCK_H
+#ifndef CSOCK_H
+#define CSOCK_H
 #include "SockMsg.h"
 //client socket
 class CCSock : public CAsyncSocket
@@ -14,6 +14,7 @@ public:
 	CCSock();
 	void SetStatus(BOOL stat);
 	BOOL IsConnected();
+	void FillBuffer(Msg &src);
 	void ProcErrorCode(int nErrorCode);
 	virtual void OnSend(int nErrorCode);
 	virtual void OnReceive(int nErrorCode);

@@ -19,6 +19,7 @@ class CMySocketApp : public CWinApp
 {
 public:
 	CMySocketApp();
+	CString m_cstrUser;
 	CString m_cstrHostIP;
 // Overrides
 public:
