@@ -2,9 +2,10 @@
 #include "SockMsg.h"
 #include "MySocket.h"
 
-Msg::Msg(CString Value, UINT Type, CTime Time)
+Msg::Msg(TCHAR Value, UINT Type, CTime Time)
 {
 	cstrValue = Value;
+	memcpy()
 	nType = Type;
 	ctTime = Time;
 	csterUser = ((CMySocketApp*)AfxGetApp())->m_cstrUser;
@@ -12,11 +13,11 @@ Msg::Msg(CString Value, UINT Type, CTime Time)
 
 Msg::Msg(const Msg & msg)
 {
-	//memcpy(this, &msg, sizeof(msg));
-	cstrValue = msg.cstrValue;
+	memcpy(this, &msg, sizeof(msg));
+	/*cstrValue = msg.cstrValue;
 	nType = msg.nType;
 	ctTime = msg.ctTime;
-	csterUser = ((CMySocketApp*)AfxGetApp())->m_cstrUser;
+	csterUser = ((CMySocketApp*)AfxGetApp())->m_cstrUser;*/
 }
 
 Msg::Msg()

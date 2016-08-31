@@ -25,38 +25,6 @@ BOOL CSSock::IsConnected()
 	return m_bConnected;
 }
 
-//void CCSock::OnSend(int nErrorCode)
-//{
-//	for (MsgDeque::iterator iter = m_mdqMsgs.begin(); iter != m_mdqMsgs.end(); iter++)
-//	{
-//		Send(&m_mdqMsgs.front(), sizeof(m_mdqMsgs.front()));
-//		m_mdqMsgs.pop_front();
-//	}
-//	//m_nLength = 0;
-//	//memset(&m_mBuffer, 0, sizeof(m_mBuffer));
-//
-//	//AsyncSelect(FD_READ);
-//	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-//	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-//	//pDlg->AddContent(m_mBuffer.cstrValue, _T("Husky"), NOW_TIME);
-//	CAsyncSocket::OnSend(nErrorCode);
-//}
-
-//void CSSock::OnReceive(int nErrorCode)
-//{
-//	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
-//	CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-//	CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-//	//pDlg->m_smMsg.Assign(m_mBuffer);
-//	m_mdqMsgs->push_back(Msg(m_mBuffer));
-//	//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
-//	//::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
-//	//AsyncSelect(FD_WRITE);
-//	//CAsyncSocket::OnReceive(nErrorCode);
-//	EchoClients();
-//}
-
-
 //TODO:
 void CSSock::OnAccept(int nErrorCode)
 {
@@ -70,7 +38,7 @@ void CSSock::OnAccept(int nErrorCode)
 		CString cstrCltName;
 		UINT nCltPort;
 		pSock->GetPeerName(cstrCltName,nCltPort);		//get information of client
-		m_mdqMsgs->push_back(Msg(_T("Connect to" + cstrCltName),TP_LOG,NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T("Connect to " + cstrCltName),TP_LOG,NOW_TIME));
 		//pDlg->AddLog(_T("Connect to ") + cstrCltName, NOW_TIME);
 		EchoClients();
 	}

@@ -2,6 +2,7 @@
 #ifndef SOCK_MSG_H
 #define SOCK_MSG_H
 
+#define USER_LENGTH 128
 #define TP_TALK 0
 #define TP_WUZIQI 1
 #define TP_PAODEKUAI 2
@@ -12,10 +13,10 @@
 
 struct Msg
 {
-	Msg(TCHAR* cstrValue, UINT nType, CTime ctTime);
+	Msg(TCHAR* cstrValue,UINT nLength, UINT nType, CTime ctTime);
 	Msg(const Msg &msg);
 	Msg();
-	TCHAR csterUser[4096];
+	//TCHAR *csterUser;
 	CTime ctTime;
 	UINT nType;
 	TCHAR cstrValue[4096];

@@ -61,7 +61,6 @@ void CCSock::OnReceive(int nErrorCode)
 		pDlg->m_smMsg.Assign(m_mBuffer);
 		//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
 		::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
-		//AsyncSelect(FD_WRITE);
 		CAsyncSocket::OnReceive(nErrorCode);
 	}
 }
