@@ -8,9 +8,7 @@ CSSock::CSSock()
 {
 	m_bConnected = false;
 	m_nLength = 0;
-	//memset(&m_mBuffer, 0, sizeof(m_mBuffer));
-	m_mBuffer.cstrValue.Empty();
-	m_mBuffer.csterUser.Empty();
+	memset(m_mBuffer.tszValue, 0, sizeof(m_mBuffer.tszValue));
 	m_mdqMsgs = new	MsgDeque();
 	m_lplistClients = new CPtrList(5);
 }
@@ -28,18 +26,21 @@ BOOL CSSock::IsConnected()
 //TODO:
 void CSSock::OnAccept(int nErrorCode)
 {
-	CBridgeSock *pSock = new CBridgeSock();		//create client pointer for possible connect
+	CBridgeSock *pSock = new CBridgeSock(this);		//create client pointer for possible connect
 	if (Accept(*pSock))
 	{
-		//pSock->AsyncSelect(FD_READ);
 		m_lplistClients->AddTail(pSock);  //client en-queue
 		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
 		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
 		CString cstrCltName;
 		UINT nCltPort;
 		pSock->GetPeerName(cstrCltName,nCltPort);		//get information of client
-		m_mdqMsgs->push_back(Msg(_T("Connect to " + cstrCltName),TP_LOG,NOW_TIME));
-		//pDlg->AddLog(_T("Connect to ") + cstrCltName, NOW_TIME);
+		cstrCltName = _T("Connect to ") + cstrCltName;
+		TCHAR cache[4096] = {'\0'};
+		memcpy(cache, cstrCltName.GetBuffer(), cstrCltName.GetLength() * sizeof(TCHAR));
+		//MultiByteToWideChar(CP_ACP, 0, cstrCltName.GetBuffer, -1, cache, MultiByteToWideChar(CP_ACP, 0, cstrCltName.GetBuffer, -1, cache, 0));
+		Msg temp(cache, cstrCltName.GetLength()*sizeof(TCHAR) , TP_LOG, NOW_TIME);
+		m_mdqMsgs->push_back(temp);
 		EchoClients();
 	}
 	else
@@ -54,16 +55,16 @@ void CSSock::OnClose(int nErrorCode)
 {
 	if (m_hSocket != INVALID_SOCKET)
 	{
-		m_bConnected = FALSE;
-		m_hSocket = INVALID_SOCKET;
-		if(!m_lplistClients->IsEmpty())
-			m_lplistClients->RemoveAll();
-		m_lplistClients = NULL;
-		m_mdqMsgs->push_back(Msg(_T("Connection Broken."), TP_LOG, NOW_TIME));
-		m_mdqMsgs->push_back(Msg(_T(" "),TP_QUIT, NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T("Connection Broken."),19, TP_LOG, NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T(" "),1,TP_QUIT, NOW_TIME));
 		EchoClients();
 		if (!m_mdqMsgs->empty())
 			m_mdqMsgs->clear();
+		if (!m_lplistClients->IsEmpty())
+			m_lplistClients->RemoveAll();
+		m_bConnected = FALSE;
+		m_hSocket = INVALID_SOCKET;
+		m_lplistClients = NULL;
 		m_mdqMsgs = NULL;
 		Close();
 	}
@@ -125,11 +126,7 @@ void CSSock::EchoClients()
 		while (ps != NULL)
 		{
 			CBridgeSock* tempBSock = (CBridgeSock*)m_lplistClients->GetNext(ps);
-			//memcpy(&tempCCSock->m_mBuffer, &tempMsg,sizeof(m_mdqMsgs.front()));
 			tempBSock->FillBuffer(tempMsg);
-			/*tempCCSock->m_mBuffer.cstrValue = tempMsg.cstrValue;
-			tempCCSock->m_mBuffer.ctTime = tempMsg.ctTime;
-			tempCCSock->m_mBuffer.nType = tempMsg.nType;*/
 			tempBSock->AsyncSelect(FD_WRITE);
 		}
 		m_mdqMsgs->pop_front();

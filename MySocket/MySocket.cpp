@@ -61,6 +61,10 @@ BOOL CMySocketApp::InitInstance()
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 	GetLocalAddress(m_cstrHostIP);		//Get local IP
+	/*CString test("test");
+	char T[128];
+	LPTSTR t = test.GetBuffer();
+	memcpy(T,test.GetBuffer(),test.GetLength()*sizeof(TCHAR));*/
 	CMySocketDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
@@ -96,11 +100,16 @@ BOOL CMySocketApp::InitInstance()
 
 void CMySocketApp::GetLocalAddress(CString &wszAdrr)
 {
-	char HostName[100];
-	gethostname(HostName, sizeof(HostName));// 获得本机主机名.
-	m_cstrUser = CString(HostName);
+	TCHAR HostName[100];
+	char t_hostname[100];
+	//WideCharToMultiByte(CP_UTF8, 0, HostName, -1, t_hostname, WideCharToMultiByte(CP_UTF8, 0, HostName, -1, t_hostname, 0,NULL,NULL),NULL,NULL);
+	gethostname(t_hostname, sizeof(HostName));// 获得本机主机名.
+	UINT nBufferLength = MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, 0);
+	MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, 0);
+	///m_cstrUser = CString(HostName);
+	memcpy(m_tszUser, HostName,nBufferLength);
 	hostent* hn;
-	hn = gethostbyname(HostName);//根据本机主机名得到本机ip
+	hn = gethostbyname(t_hostname);//根据本机主机名得到本机ip
 	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[1]);//把ip换成字符串形式
 }
 

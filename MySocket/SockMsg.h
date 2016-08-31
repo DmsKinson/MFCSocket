@@ -13,13 +13,13 @@
 
 struct Msg
 {
-	Msg(TCHAR* cstrValue,UINT nLength, UINT nType, CTime ctTime);
+	Msg(TCHAR* Value, UINT Length, UINT Type, CTime Time);
 	Msg(const Msg &msg);
 	Msg();
 	//TCHAR *csterUser;
 	CTime ctTime;
 	UINT nType;
-	TCHAR cstrValue[4096];
+	TCHAR tszValue[4096];
 };
 
 class SockMsg
@@ -32,13 +32,10 @@ public:
 	~SockMsg();
 	void Fresh();
 	void Assign(const Msg& src);
-	//BOOL InsertValue(UINT nType,TCHAR *szValue);
-	//BOOL GetValue(TCHAR *pszDst);
 	BOOL IsEmpty();
 	CString GetCString();
 	int GetType();
 	CTime GetTime();
 };
-
 
 #endif // !SOCK_MSG_H

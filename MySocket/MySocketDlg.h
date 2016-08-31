@@ -19,10 +19,10 @@ class CMySocketDlg : public CDialogEx
 // Construction
 private:
 	int m_nTryCount;
-	CCSock *m_sktCSock;
-	CSSock *m_sktSSock;
 	UINT m_nPort;
 	BOOL m_bIsServer;
+	CCSock *m_sktCSock;
+	CSSock *m_sktSSock;
 public:
 	CMySocketDlg(CWnd* pParent = NULL);	// standard constructor
 	SockMsg m_smMsg;

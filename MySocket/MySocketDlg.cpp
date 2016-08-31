@@ -217,20 +217,27 @@ void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CMySocketDlg::OnBnClickedAbort()
 {
-	if (m_sktCSock == NULL)
-		return;
-	if (m_sktCSock->m_hSocket != INVALID_SOCKET)
+	if (IsServer())
 	{
-		m_sktCSock->m_hSocket = INVALID_SOCKET;
-		m_sktCSock->SetStatus(FALSE);
-		m_sktCSock->ShutDown(2);
-		m_sktCSock->Close();
-		m_sktCSock = NULL;
-		AddLog(_T("Connection aborted."), NOW_TIME);
+		if (!m_sktSSock->m_lplistClients->IsEmpty())
+		{
+			Msg cache(_T("Server Quit."), 13, TP_QUIT, NOW_TIME);
+			m_sktSSock->m_mdqMsgs->push_back(cache);
+			m_sktSSock->EchoClients();
+		}
+		m_sktSSock->m_mdqMsgs->clear();
+		m_sktSSock->m_mdqMsgs = NULL;
+		m_sktSSock->m_lplistClients->RemoveAll();
+		m_sktSSock->m_lplistClients = NULL;
+		m_bIsServer = FALSE;
+		m_sktSSock = NULL;
+		m_btnConnect.EnableWindow(TRUE);
+		m_btnHost.EnableWindow(TRUE);
 	}
-	m_btnConnect.EnableWindow(TRUE);
-	m_btnHost.EnableWindow(TRUE);
-	// TODO: Add your control notification handler code here
+	else
+	{
+
+	}
 }
 
 void CMySocketDlg::OnBnClickedHost()
@@ -278,16 +285,13 @@ void CMySocketDlg::OnBnClickedSend()
 {
 	if (m_sktCSock->IsConnected())
 	{
-		Msg temp;
-		temp.ctTime = NOW_TIME;
-		temp.nType = TP_TALK;
-		m_edtTalk.GetWindowTextW(temp.cstrValue);
+		CString cache;
+		m_edtTalk.GetWindowTextW(cache);
+		Msg temp(cache.GetBuffer(), cache.GetLength() * sizeof(TCHAR), TP_TALK, NOW_TIME);
 		m_sktCSock->m_nLength = sizeof(temp);
-		//m_smMsg.Assign(temp);
 		m_sktCSock->FillBuffer(temp);
 		m_sktCSock->AsyncSelect(FD_WRITE);
 		m_edtTalk.SetWindowTextW(_T(""));
-		//AddContent(temp.cstrValue,temp.csterUser, NOW_TIME);
 	}
 	else
 	{

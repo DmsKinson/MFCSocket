@@ -5,6 +5,7 @@
 
 
 #include "SockMsg.h"
+#include "SSock.h"
 #include <deque>
 using namespace std;
 
@@ -15,10 +16,9 @@ private:
 	Msg m_mBuffer;
 public:
 	UINT m_nLength;
-	CPtrList *m_lplistClients;
-	MsgDeque *m_mdqMsgs;
+	CSSock *m_ssFather;
 	CBridgeSock();
-	CBridgeSock(CPtrList *lplistClients, MsgDeque *mdqMsgs);
+	CBridgeSock(CSSock *ssFather);
 	void FillBuffer(Msg &src);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnSend(int nErrorCode);

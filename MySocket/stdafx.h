@@ -35,6 +35,7 @@
 
 #include <afxsock.h>            // MFC socket extensions
 
+
 #define WM_USER_RECVMSG WM_USER + 1
 #define NOW_TIME CTime::GetCurrentTime()
 
