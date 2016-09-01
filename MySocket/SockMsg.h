@@ -3,7 +3,7 @@
 #define SOCK_MSG_H
 
 #define USER_LENGTH 128
-#define TP_TALK 0
+#define TP_TALK 6
 #define TP_WUZIQI 1
 #define TP_PAODEKUAI 2
 #define TP_MINE 3
@@ -13,10 +13,10 @@
 
 struct Msg
 {
-	Msg(TCHAR* Value, UINT Length, UINT Type, CTime Time);
+	Msg(TCHAR* Value,TCHAR* User, UINT Length, UINT Type, CTime Time);
 	Msg(const Msg &msg);
 	Msg();
-	//TCHAR *csterUser;
+	//TCHAR *tszUser;
 	CTime ctTime;
 	UINT nType;
 	TCHAR tszValue[4096];
@@ -34,6 +34,7 @@ public:
 	void Assign(const Msg& src);
 	BOOL IsEmpty();
 	CString GetCString();
+	CString GetUser();
 	int GetType();
 	CTime GetTime();
 };

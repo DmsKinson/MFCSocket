@@ -6,9 +6,8 @@
 //Server Socket
 CSSock::CSSock()
 {
-	m_bConnected = false;
+	m_bConnected = FALSE;
 	m_nLength = 0;
-	memset(m_mBuffer.tszValue, 0, sizeof(m_mBuffer.tszValue));
 	m_mdqMsgs = new	MsgDeque();
 	m_lplistClients = new CPtrList(5);
 }
@@ -29,17 +28,14 @@ void CSSock::OnAccept(int nErrorCode)
 	CBridgeSock *pSock = new CBridgeSock(this);		//create client pointer for possible connect
 	if (Accept(*pSock))
 	{
+		pSock->AsyncSelect(FD_READ);
+		pSock->m_ssFather = this;
 		m_lplistClients->AddTail(pSock);  //client en-queue
-		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
 		CString cstrCltName;
 		UINT nCltPort;
 		pSock->GetPeerName(cstrCltName,nCltPort);		//get information of client
 		cstrCltName = _T("Connect to ") + cstrCltName;
-		TCHAR cache[4096] = {'\0'};
-		memcpy(cache, cstrCltName.GetBuffer(), cstrCltName.GetLength() * sizeof(TCHAR));
-		//MultiByteToWideChar(CP_ACP, 0, cstrCltName.GetBuffer, -1, cache, MultiByteToWideChar(CP_ACP, 0, cstrCltName.GetBuffer, -1, cache, 0));
-		Msg temp(cache, cstrCltName.GetLength()*sizeof(TCHAR) , TP_LOG, NOW_TIME);
+		Msg temp(cstrCltName.GetBuffer(),LOCAL_USER, cstrCltName.GetLength()*sizeof(TCHAR) , TP_LOG, NOW_TIME);
 		m_mdqMsgs->push_back(temp);
 		EchoClients();
 	}
@@ -55,8 +51,8 @@ void CSSock::OnClose(int nErrorCode)
 {
 	if (m_hSocket != INVALID_SOCKET)
 	{
-		m_mdqMsgs->push_back(Msg(_T("Connection Broken."),19, TP_LOG, NOW_TIME));
-		m_mdqMsgs->push_back(Msg(_T(" "),1,TP_QUIT, NOW_TIME));
+		m_mdqMsgs->push_back(Msg(_T("Connection Broken."),((CMySocketApp*)AfxGetApp())->m_tszUser,sizeof("Connection Broken.")*sizeof(TCHAR)+USER_LENGTH, TP_LOG, NOW_TIME));
+		//m_mdqMsgs->push_back(Msg(_T(" "),2,TP_QUIT, NOW_TIME));
 		EchoClients();
 		if (!m_mdqMsgs->empty())
 			m_mdqMsgs->clear();
@@ -68,13 +64,12 @@ void CSSock::OnClose(int nErrorCode)
 		m_mdqMsgs = NULL;
 		Close();
 	}
-	delete this;
+	//delete this;
 }
 
 CSSock::~CSSock()
 {
-	if (m_hSocket != INVALID_SOCKET)
-		Close();
+	PreClose();
 }
 
 void CSSock::ProcErrorCode(int nErrorCode)
@@ -130,6 +125,28 @@ void CSSock::EchoClients()
 			tempBSock->AsyncSelect(FD_WRITE);
 		}
 		m_mdqMsgs->pop_front();
+	}
+	
+}
+
+void CSSock::PreClose()
+{
+	if (m_hSocket != INVALID_SOCKET)
+	{
+		if (!m_lplistClients->IsEmpty())
+		{
+			if (m_mdqMsgs != NULL)
+			{
+				Msg cache(_T("Connection interrupted!"), LOCAL_USER, sizeof(_T("Connection interrupted!")) * sizeof(TCHAR), TP_QUIT, NOW_TIME);
+				m_mdqMsgs->push_back(cache);
+				EchoClients();
+				m_lplistClients = NULL;
+				m_mdqMsgs = NULL;
+				m_bConnected = FALSE;
+				Close();
+				m_hSocket = INVALID_SOCKET;
+			}
+		}
 	}
 	
 }

@@ -10,7 +10,6 @@ class CSSock : public CAsyncSocket
 {
 private:
 	BOOL m_bConnected;
-	Msg m_mBuffer;
 public:
 	UINT m_nLength;
 	CPtrList *m_lplistClients;
@@ -20,9 +19,7 @@ public:
 	BOOL IsConnected();
 	void ProcErrorCode(int nErrorCode);
 	void EchoClients();
-	//virtual void OnSend(int nErrorCode);
-	//virtual void OnReceive(int nErrorCode);
-	//virtual void OnConnect(int nErrorCode);
+	void PreClose();	
 	virtual void OnAccept(int nErrorCode);
 	virtual void OnClose(int nErrorCode);
 	~CSSock();

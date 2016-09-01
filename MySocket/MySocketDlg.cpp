@@ -22,6 +22,8 @@ CMySocketDlg::CMySocketDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_sktCSock = NULL;
 	m_sktSSock = NULL;
+	m_bIsServer = FALSE;
+	m_smMsg.Fresh();
 }
 
 BOOL CMySocketDlg::IsServer()
@@ -52,6 +54,7 @@ BEGIN_MESSAGE_MAP(CMySocketDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_HOST, &CMySocketDlg::OnBnClickedHost)
 	ON_MESSAGE(WM_USER_RECVMSG, &CMySocketDlg::OnRecvMsg)
 	ON_BN_CLICKED(IDC_ABORT, &CMySocketDlg::OnBnClickedAbort)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -140,17 +143,22 @@ LRESULT CMySocketDlg::OnRecvMsg(WPARAM wParam, LPARAM lParam)
 			AddLog(m_smMsg.GetCString(),m_smMsg.GetTime());
 			break;
 		case TP_TALK:
-			AddContent(m_smMsg.GetCString(),_T("Teddy"),m_smMsg.GetTime());
+			AddContent(m_smMsg.GetCString(),m_smMsg.GetUser(),m_smMsg.GetTime());
 			break;
 		case TP_WUZIQI:
 			break;
 		case TP_PAODEKUAI:
 			break;
 		case TP_QUIT:
-			m_sktSSock->AsyncSelect(FD_CLOSE);
+			AddLog(m_smMsg.GetCString(), m_smMsg.GetTime());
+			m_sktCSock->PreClose();
+			//m_sktCSock->OnClose();
+			//m_sktCSock->AsyncSelect(FD_CLOSE);
+			break;
 		default:
 			break;
 		}
+		m_smMsg.Fresh();
 	}
 	return LRESULT();
 }
@@ -189,8 +197,7 @@ void CMySocketDlg::ClearContent()
 
 void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: Add your message handler code here and/or call default
-	if (m_sktCSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
+	if (m_sktCSock!=NULL && m_sktCSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
 	{
 		BOOL bFlag = m_sktCSock->Create(0, SOCK_STREAM, FD_CONNECT);
 		if (!bFlag)
@@ -200,9 +207,7 @@ void CMySocketDlg::OnTimer(UINT_PTR nIDEvent)
 			return;
 		}
 	}
-	//m_sktCSock->Connect(m_cstrServerAddr, m_nPort);
-	m_sktCSock->Connect(_T("223.3.217.186"), m_nPort);
-
+	m_sktCSock->Connect(m_cstrServerAddr, m_nPort);
 	m_nTryCount++;
 	if (m_nTryCount > 10 || m_sktCSock->IsConnected())
 	{
@@ -219,24 +224,27 @@ void CMySocketDlg::OnBnClickedAbort()
 {
 	if (IsServer())
 	{
-		if (!m_sktSSock->m_lplistClients->IsEmpty())
+		if (m_sktSSock != NULL)
 		{
-			Msg cache(_T("Server Quit."), 13, TP_QUIT, NOW_TIME);
-			m_sktSSock->m_mdqMsgs->push_back(cache);
-			m_sktSSock->EchoClients();
+			m_sktSSock->PreClose();
+			m_sktSSock = NULL;
+			m_bIsServer = FALSE;
+			m_btnConnect.EnableWindow(TRUE);
+			m_btnHost.EnableWindow(TRUE);
 		}
-		m_sktSSock->m_mdqMsgs->clear();
-		m_sktSSock->m_mdqMsgs = NULL;
-		m_sktSSock->m_lplistClients->RemoveAll();
-		m_sktSSock->m_lplistClients = NULL;
-		m_bIsServer = FALSE;
-		m_sktSSock = NULL;
-		m_btnConnect.EnableWindow(TRUE);
-		m_btnHost.EnableWindow(TRUE);
 	}
 	else
 	{
-
+		if (m_sktCSock != NULL)
+		{
+			CString t_cstr(" Quit");
+			t_cstr = LOCAL_IP + t_cstr;
+			Msg cache(t_cstr.GetBuffer(), LOCAL_USER, t_cstr.GetLength() * sizeof(TCHAR), TP_QUIT, NOW_TIME);
+			m_sktCSock->Send(&cache, sizeof(cache));
+			m_sktCSock->PreClose();
+			AddLog(_T("Connection interrupt!"), NOW_TIME);
+			m_sktCSock = NULL;
+		}
 	}
 }
 
@@ -245,15 +253,13 @@ void CMySocketDlg::OnBnClickedHost()
 	
 	if (m_sktSSock == NULL)
 		m_sktSSock = new CSSock();
-	//Clear socket
-	//m_nPort = 1088;
 	if (m_sktSSock->m_hSocket == INVALID_SOCKET)		//re-create valid socket
 	{
 		BOOL bFlag = m_sktSSock->Create(1088, SOCK_STREAM, FD_ACCEPT);
 		if (!bFlag)
 		{
 			m_sktSSock->ProcErrorCode(GetLastError());
-			m_sktSSock->Close();
+			m_sktSSock->PreClose();
 			return;
 		}
 	}
@@ -264,19 +270,19 @@ void CMySocketDlg::OnBnClickedHost()
 		if (m_sktSSock->GetLastError() != WSAEWOULDBLOCK)
 		{
 			AfxMessageBox(_T("Error"));
-			m_sktSSock->Close();
+			m_sktSSock->PreClose();
 		}
 	}
-	m_bIsServer = TRUE;		//Become a server;
+	///Become a server;
+	m_bIsServer = TRUE;		
 	AddLog(_T("Waiting for connecting... ") , NOW_TIME);
-	//create and connect self-client 
+	///create and connect self-client 
 	if (m_sktCSock == NULL)
 		m_sktCSock = new CCSock();
-	SetTimer(0, 1000, NULL);		//Set timer to connect
+	///Set timer to connect
+	SetTimer(0, 1000, NULL);		
 	m_nTryCount = 0;
-	//m_sktCSock->Connect(pApp->m_cstrHostIP, m_nPort);
-	//m_sktCSock->Connect("223.3.217.186", m_nPort);
-	//Forbidden button
+	///Forbid button
 	m_btnConnect.EnableWindow(FALSE);
 	m_btnHost.EnableWindow(FALSE);
 }
@@ -287,7 +293,7 @@ void CMySocketDlg::OnBnClickedSend()
 	{
 		CString cache;
 		m_edtTalk.GetWindowTextW(cache);
-		Msg temp(cache.GetBuffer(), cache.GetLength() * sizeof(TCHAR), TP_TALK, NOW_TIME);
+		Msg temp(cache.GetBuffer(), LOCAL_USER, cache.GetLength() * sizeof(TCHAR), TP_TALK, NOW_TIME);
 		m_sktCSock->m_nLength = sizeof(temp);
 		m_sktCSock->FillBuffer(temp);
 		m_sktCSock->AsyncSelect(FD_WRITE);
@@ -306,11 +312,14 @@ void CMySocketDlg::OnBnClickedConnect()
 		AfxSocketInit();
 		m_sktCSock = new CCSock();
 	}
-	/*m_sktSock->ShutDown(2);
-	m_sktSock->m_hSocket = INVALID_SOCKET;
-	m_sktSock->SetStatus(FALSE);*/
-	//m_nPort = 1088;
 	m_edtIP.GetWindowText(m_cstrServerAddr);	//Get target IP
 	SetTimer(0, 1000, NULL);		//Set timer to connect
 	m_nTryCount = 0;
+}
+
+
+void CMySocketDlg::OnClose()
+{
+	OnBnClickedAbort();
+	CDialogEx::OnClose();
 }

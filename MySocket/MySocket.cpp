@@ -60,6 +60,7 @@ BOOL CMySocketApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	memset(m_tszUser, 0, USER_LENGTH);
 	GetLocalAddress(m_cstrHostIP);		//Get local IP
 	/*CString test("test");
 	char T[128];
@@ -100,17 +101,17 @@ BOOL CMySocketApp::InitInstance()
 
 void CMySocketApp::GetLocalAddress(CString &wszAdrr)
 {
-	TCHAR HostName[100];
-	char t_hostname[100];
+	TCHAR HostName[USER_LENGTH] = {'\0'};
+	char t_hostname[USER_LENGTH] = {'\0'};
 	//WideCharToMultiByte(CP_UTF8, 0, HostName, -1, t_hostname, WideCharToMultiByte(CP_UTF8, 0, HostName, -1, t_hostname, 0,NULL,NULL),NULL,NULL);
 	gethostname(t_hostname, sizeof(HostName));// 获得本机主机名.
 	UINT nBufferLength = MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, 0);
-	MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, 0);
-	///m_cstrUser = CString(HostName);
-	memcpy(m_tszUser, HostName,nBufferLength);
+	MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, MultiByteToWideChar(CP_ACP, 0, t_hostname, -1, HostName, 0)); 
+	//m_cstrUser = CString(HostName);
+	memcpy(m_tszUser, HostName,nBufferLength*sizeof(TCHAR));
 	hostent* hn;
 	hn = gethostbyname(t_hostname);//根据本机主机名得到本机ip
-	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[1]);//把ip换成字符串形式
+	wszAdrr = inet_ntoa(*(struct in_addr *)hn->h_addr_list[0]);//把ip换成字符串形式
 }
 
 

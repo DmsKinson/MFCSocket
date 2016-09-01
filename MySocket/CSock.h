@@ -16,6 +16,7 @@ public:
 	BOOL IsConnected();
 	void FillBuffer(Msg &src);
 	void ProcErrorCode(int nErrorCode);
+	void PreClose();
 	virtual void OnSend(int nErrorCode);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnConnect(int nErrorCode);

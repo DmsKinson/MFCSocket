@@ -5,11 +5,10 @@
 //client socket
 CCSock::CCSock()
 {
-	m_bConnected = false;
+	m_bConnected = FALSE;
 	m_nLength = 0;
 	memset(&m_mBuffer.tszValue, 0, sizeof(m_mBuffer.tszValue));
-	//m_mBuffer.csterUser.Empty();
-	//m_mBuffer.tszValue.Empty();
+	m_mBuffer.nType = 0;
 }
 
 void CCSock::SetStatus(BOOL bStat)
@@ -25,29 +24,22 @@ BOOL CCSock::IsConnected()
 void CCSock::FillBuffer(Msg & src)
 {
 	memset(m_mBuffer.tszValue, 0, sizeof(m_mBuffer.tszValue));
+	m_mBuffer.nType = 0;
 	memcpy(&m_mBuffer, &src, sizeof(src));
-	/*m_mBuffer.tszValue = src.tszValue;
-	m_mBuffer.ctTime = src.ctTime;
-	m_mBuffer.nType = src.nType;*/
 	m_nLength = sizeof(m_mBuffer);
 }
 
 
 void CCSock::OnSend(int nErrorCode)
 {
-	if (m_mBuffer.nType < 0)
+	if (m_mBuffer.nType == 0)
 	{
 		AfxMessageBox(_T("Can't send empty messsage."));
 		return;
 	}
 	Send(&m_mBuffer, m_nLength);
-	//AsyncSelect(FD_READ);
-	//CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
-	//CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
-	//pDlg->AddContent(m_mBuffer.cstrValue, _T("Husky"), NOW_TIME);
 	m_nLength = 0;
 	memset(m_mBuffer.tszValue, 0, sizeof(m_mBuffer.tszValue));
-	//m_mBuffer.tszValue.Empty();
 	AsyncSelect(FD_READ);
 	CAsyncSocket::OnSend(nErrorCode);
 }
@@ -55,12 +47,11 @@ void CCSock::OnSend(int nErrorCode)
 void CCSock::OnReceive(int nErrorCode)
 {
 	m_nLength = Receive(&m_mBuffer, sizeof(m_mBuffer));
-	if (m_nLength > 0)
+	if (m_mBuffer.nType > 0)
 	{
 		CMySocketApp* pApp = (CMySocketApp*)AfxGetApp();
 		CMySocketDlg* pDlg = (CMySocketDlg*)pApp->m_pMainWnd;
 		pDlg->m_smMsg.Assign(m_mBuffer);
-		//memcpy(&pDlg->m_smMsg, &m_mBuffer, sizeof(m_mBuffer));
 		::PostMessage(pDlg->handle, WM_USER_RECVMSG, 0, 0);
 		CAsyncSocket::OnReceive(nErrorCode);
 	}
@@ -135,5 +126,15 @@ void CCSock::ProcErrorCode(int nErrorCode)
 	default:
 		AfxMessageBox(_T("Unknown Error."));
 		break;
+	}
+}
+
+void CCSock::PreClose()
+{
+	if (m_hSocket != INVALID_SOCKET)
+	{
+		m_bConnected = FALSE;
+		Close();
+		m_hSocket = INVALID_SOCKET;
 	}
 }

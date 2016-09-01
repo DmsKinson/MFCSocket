@@ -68,6 +68,7 @@ public:
 	CButton m_btnConnect;
 	CButton m_btnHost;
 	CButton m_btnSend;
+	afx_msg void OnClose();
 };
 
 #endif // !MY_SOCKET_DLG_H

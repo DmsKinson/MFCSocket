@@ -19,10 +19,10 @@ public:
 	CSSock *m_ssFather;
 	CBridgeSock();
 	CBridgeSock(CSSock *ssFather);
+	void PreClose();
 	void FillBuffer(Msg &src);
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnSend(int nErrorCode);
-	virtual void OnClose(int nErrorCode);
 	virtual ~CBridgeSock();
 };
 
